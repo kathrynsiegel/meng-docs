@@ -1,0 +1,41 @@
+\documentclass[../proposal.tex]{subfiles}
+
+\begin{document}
+
+\section{Introduction}
+
+A data scientist's pipeline for creating and training machine learning (ML)
+models is a multi-step, repetitive process. Specifically, the process involves 
+defining the model specifications, training the model on a dataset, cross-
+validating the results on test data, tweaking the model specifications and/or
+dataset, and beginning the whole cycle over again. Eventually, a model is 
+produced that meets a reasonably high standard of accuracy in the cross-
+validation step, and this model is the one that is selected for further use.
+Because of this cyclical iteration pattern, existing machine learning tools
+require users to test model hypotheses sequentially. Users must train one model
+after the other, manually specifying parameters such as the datafolds and the
+number of training iterations. This manual component incurs a significant time
+cost. 
+
+WahooML is a system that accelerates this iterative process by optimizing model
+training runs and allowing multiple models to be trained together. The
+system also exposes a developer API that allows users to specify custom models
+and estimators. WahooML revolves around the concept of a ``hypothesis,'' which
+refers to an insight that a data scientist is trying to reach by training
+models on a set of data. WahooML accepts a full data set and the specifications
+of the training model. The query optimizer component of the system then
+optimally groups and tests datafolds such that it finds the ideal output in the
+least computationally expensive way possible. The ModelDB component of the
+system stores intermediate computation, as well as the outputted model, such
+that WahooML can strategically reuse past computation if it were to see an
+identical or similar model specification in the future. Finally, the WahooML
+user interface (UI) displays interesting visualizations of the entire process.
+
+My work this semester has focused on creating a basic system that stores
+trained models in an external database, such that the result does not have to
+be recomputed. My work for the rest of the academic year will mainly focus on
+the query optimizer component of the system. In this proposal, I describe the
+research and decisions that led to the current design of the system, as well as
+the optimizations I plan to study and implement in WahooML.
+
+\end{document}

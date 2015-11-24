@@ -1,0 +1,61 @@
+\documentclass[../proposal.tex]{subfiles}
+\begin{document}
+
+\section{Initial Progress}
+
+In the first half of the semester, we have developed an initial prototype that
+caches trained models in a model database built using MongoDB. In this section,
+I discuss the initial design discussions and the thought processes that helped
+formulate the preliminary system.
+
+\subsection{Spark-WahooML Integration}
+
+To integrate WahooML with Spark, we use the Spark package name and override
+methods in the Spark codebase by using traits and extending certain classes.
+Our implementation requires using the same package name as Spark ML, as we use
+and modify private constructors and methods only accessible from within the
+Spark ML package. Traits, also known as mix-ins, allow overriding methods of a
+class and adding attributes to a class. By using a combination of traits and
+custom classes that extend Spark classes, we can override the $fit()$ and
+$train()$ methods of the Spark ML Estimator subclasses and add additional
+functionality.  From a user standpoint, this design is minimally cumbersome to
+integrate into an existing data analysis workflow, as the user merely has to
+use the WahooML version of a particular Estimator class; the rest of the
+training code stays the same. Additionally, this design avoids copying over any
+boilerplate code from Spark. We will have to copy some logic from Spark, but we
+can incrementally copy over this logic as we explore more and more
+optimizations.
+
+We chose this design because it involves copying over the minimal amount of
+boilerplate code and complex logic from the Spark codebase. As the code stands
+now, we do not have any boilerplate code in the WahooML codebase that exists
+for the sole purpose of integration with Spark. Using traits allows us to add
+features and optimizations incrementally, which significantly sped up the
+development time of the MVP. WahooML also avoids needing to modify any method
+signatures in the Spark ML codebase and black-boxes Spark as a separate library.
+
+\subsection{ModelDB}
+
+The Model Database, or ModelDB, is built on top of MongoDB using the Casbah
+framework. For a Spark Estimator, the class used to train models, we present an
+analogous WahooML version. We have implemented WahooML logistic regression and
+WahooML linear regression classes, and intend to support further training
+algorithms in the future. These WahooML estimator classes extend their
+Spark ML counterparts, simply adding traits that call into the underlying
+database. This design choice lends itself well to adding additional WahooML
+Estimators, as the storage logic for a single estimator type is contained
+within that single estimator class. 
+
+The ModelDB trait, when extended by a WahooML Estimator class, checks the
+database for an already-trained model whenever the $fit()$ function is called.
+If a matching model is found, it is returned to the user. Otherwise, the
+$fit()$ function proceeds as usual, and before returning the trained model to
+the user, the system stores it in the database. For each model in the database,
+we store the fields encapsulated by the trained model, a database object
+representation of the model specification, and a hash of the dataset on which
+the model was trained. Doing so allows us to query for a trained model by its
+model specification and training dataset. Future research will investigate what
+other computation we can store in the database to reduce overall computation.
+
+
+\end{document}

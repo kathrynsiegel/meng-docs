@@ -1,0 +1,139 @@
+\documentclass[../proposal.tex]{subfiles}
+
+\begin{document}
+
+\section{Proposed Work}
+
+I intend to continue my research with WahooML for the rest of this fall 2015
+semester, IAP 2016, and the spring 2016 semester. In general, the WahooML
+development team will work on the three main components of the system, which
+are as follows.
+
+\begin{enumerate}[topsep=0pt,itemsep=-1ex,partopsep=1ex,parsep=1ex]
+
+\item The user interface (UI) is a web interface that allows users to launch
+Spark ML runs using WahooML optimizations and to monitor the progress of these
+runs. 
+
+\item The ModelDB stores a global repository of models with information about
+the trained model, the model specification, and the data used to train the
+model. My work thus far this semester has focused on creating the ModelDB, as
+described in the ``Initial Progress'' section. 
+
+\item The optimizer determines the best plan for training a group of models on
+a dataset. Optimizing a training run involves training many models in parallel
+and reusing computation among each parallel training run.  Additionally, the
+optimizer will query the ModelDB for useful computational results and use this
+information to further reduce the necessary computation for the run. 
+
+\end{enumerate}
+
+My work will focus on the optimizer component of the system. First, I will
+research and implement optimizations for incremental training on increasing
+amounts of data and number of iterations. This will involve creating a
+dataframe wrapper module that captures changes in training data and tracks
+these changes in the model training process. Furthermore, we will define two
+separate APIs for users to access WahooML's features: (1) an API that trains
+the model on increasing amounts of data, strategically using both the dataframe
+wrapper module and results from previous runs, and (2) an API that trains
+models with a ``warm start,'' i.e. begins training on an already-trained model
+with a specification involving fewer iterations. 
+
+Next, I will research optimizations for training models on many different folds
+of a dataset. A dataset is often split into K folds, with each model trained on
+a different subset of the K datafolds. Training these models simultaneously
+allows the system to reuse computation for each datafold.
+
+Once the core system is built, I will research optimizations on ensemble
+models. Spark ML already supports the capability for ensemble models, so
+WahooML will provide optimizations via batched and reusable computation.
+
+\subsection{Incremental Data}
+
+A common pattern in a data scientist's workflow involves training the same
+model on increasing amounts of data. Existing machine learning tools retrain a
+model from scratch on the entire dataset when new data is added. We will avoid
+this large amount of recomputation by optimizing WahooML to reuse information
+from previous data runs.
+
+At a high level, the system will use a new $addData()$ function, which will be a method in the model classes and accept a DataFrame as a parameter. This function will train the model on additional data, changing the model parameters to reflect both the new data and the old data. The system will also store each incrementally trained model in the ModelDB. A workflow would work as follows.
+
+\begin{enumerate}
+
+\item The user trains the model with dataset DF1.
+
+\item The user trains the same model on a set of additional rows, which make up dataset DF2. So, the model has been trained on DF1 + DF2. Both of these models are now in the ModelDB.
+
+\end{enumerate}
+
+This design is specifically targeted towards the addition of rows and does not
+allow for any other types of data transform. Implementation will involve
+modifying the underlying machine learning library supporting Spark ML using
+traits or subclassing. We will need to enable this library, Breeze, to support
+``warm starts,'' or submitting an already-trained model to be trained further.
+
+\subsection{Incremental Training Runs}
+
+Another common pattern in a data scientist's workflow involves training a model
+with an increasing number of iterations, with the purpose of obtaining a more
+accurate model. Existing machine learning tools simply retrain all models from
+stratch, instead of taking advantage of models that may have been previously
+trained with fewer iterations. Our system will avoid this unnecessary
+computation by using ``warm starts,'' or training runs initialized with an
+already-trained model.
+
+At a high level, before training a given model X, WahooML will search in the
+model database for models with the same DataFrame and model specification as
+model X. The system will modify the search parameters to allow for results with
+model specifications containing a lesser number of training iterations than
+model X's specification. The system will find the difference between the number
+of iterations with which the stored model was trained and the number of
+iterations with which model X should be trained. It will then perform this
+delta number of iterations on the already-trained model. Since Spark does not
+explicitly provide for warm starts, this functionality must be added to the
+codebase.
+
+\subsection{K-Folds}
+
+A third common pattern when training models is splitting the total training
+dataset into multiple ``folds'' of data. Data scientists train models on
+subsets of folds and use cross validation to find the best model. Cross
+validation is an important tool to test whether a trained model is accurate on
+other data points on which it was not trained. A model's performance on the
+test fold is predictive of its performance on datasets with unknown
+categorization. Spark ML has a CrossValidator class that handles
+cross-validation and selection of the optimal model. Consider a dataset with
+three folds: A, B, and C. The typical process the Spark cross-validator uses to
+find an optimal model would proceed as follows.
+
+\begin{enumerate}[topsep=0pt,itemsep=-1ex,partopsep=1ex,parsep=1ex]
+\item A model is trained with folds A and B and is cross-validated on C.
+\item The model is trained with folds B and C and is cross-validated on A.
+\item The model is trained with folds A and C and is cross-validated on B.
+
+\item The data scientist selects the model with the highest accuracy on the
+cross validation step.
+\end{enumerate}
+
+As a result, a large number of folds implies an large number of subsets.
+Currently, each of the models must be trained serially, with each of K folds
+being used in some N$<$K subsets. WahooML will provide a more computationally
+efficient WahooCrossValidator class that extends the existing Spark
+CrossValidator class. The system will reuse training computation for the same
+fold across the different training runs conducted by the cross-validator.
+WahooML can also detect suboptimal models early on in the process and eliminate
+them, decreasing overall computation.
+
+\subsection{Ensemble Models}
+
+An ensemble model is a machine learning algorithm created from a set of other
+models. In Spark, an ensemble model is either a gradient-boosted tree or a
+random forest, both of which use decision trees as their base models. My
+research will focus on random forests.
+
+Random forests combine a set of decision trees to minimize overfitting. At a
+high level, my research plans to optimize formation of a random forest by
+training a set of decision trees together. Moreover, I will investigate the
+possibility of simultaneously combining and training these decision trees.
+
+\end{document}

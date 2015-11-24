@@ -1,0 +1,52 @@
+\documentclass[../proposal.tex]{subfiles}
+
+\begin{document}
+
+\section{Previous Work}
+
+In this section, I provide an overview of the existing ML tools Weka and
+AzureML and evaluate the benefits and shortcomings of each tool. On the whole,
+WahooML will provide significant performance advantages over these popular
+existing tools.
+
+\subsection{Weka}
+Weka is a data mining program written in Java. It provides a GUI through which
+a user can import measurements and view them in a table.  Through this GUI,
+data scientists can select machine learning classification algorithms and the
+parameters associated with these algorithms. One can also select which subset
+of features to use with an ML algorithm; there is a supervised learning feature
+to help users select attributes. Weka then runs the ML algorithm and reports
+detailed results of the model back to the user. Morever, users may write a new
+classifier or filter using Weka's Java API and use it alongside the
+already-existing tools. [4]
+
+The system has an flexible, intuitive interface that provides ample data for
+data scientiests. However, there are several significant drawbacks to using
+Weka. Iterating on different feature sets and algorithms can be slow and
+cumbersome due to the manual selection process for data. A lot of information
+is provided by Weka, but Weka provides no guidance as to how that information
+could help training future models. Moreover, the system forces the user to
+conduct model refinement sequentially, without any method to avoid unnecessary
+recomputation. Overall, there are many components of Weka, such as the
+intuitive UI and wealth of outputted data, that we should emulate in WahooML.
+However, WahooML would provide benefits such as parallel model training and
+strategic storage to reduce overall computation time.
+
+\subsection{Azure ML}
+Azure Machine Learning is a system that allows users to run machine learning
+workflows. It provides a UI for users as well as cloud hosting and storage.
+Users interact with Azure ML by creating dataflow diagrams that detail
+experiments. Individual nodes in these experiments represent operations on data
+ranging from transformations to model training. Azure ML then processes the
+experiment and returns the results and computed statistics to the user. Users
+can programmatically create their own modules and import tham into Azure ML. [1]
+
+Similarly to Azure ML, WahooML will provide data pipeline visualizations and
+allow users to integrate their custom code with the system. However, Azure ML
+limits user capabilities in several ways. The system forces users to use the
+Azure cloud instead of a custom hosting site, restricts custom additions to
+live within individual modules, and is very slow when compared to alternatives.
+WahooML will avoid these shortcomings, while also offering benefits such as
+warm-start runs and incremental training capabilities.
+
+\end{document}

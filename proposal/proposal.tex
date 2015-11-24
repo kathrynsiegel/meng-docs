@@ -1,0 +1,144 @@
+%----------------------------------------------------------------------------------------
+%	PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
+%----------------------------------------------------------------------------------------
+\newcommand{\myfontsize}{12pt}
+\newcommand{\projectname}{WahooML}
+
+\documentclass[\myfontsize, letterpaper]{article}
+
+\usepackage[T1]{fontenc} % Use 8-bit encoding that has 256 glyphs
+% \usepackage{microtype} % Slightly tweak font spacing for aesthetics
+\usepackage{setspace}
+
+\usepackage[hmarginratio=1:1,top=32mm,columnsep=20pt,margin=1.0in]{geometry} % Document margins
+\usepackage{multicol} % Used for the two-column layout of the document
+\usepackage[hang, small,labelfont=bf,up,textfont=it,up]{caption} % Custom captions under/above floats in tables or figures
+\usepackage{booktabs} % Horizontal rules in tables
+\usepackage{float} % Required for tables and figures in the multi-column environment - they need to be placed in specific locations with the [H] (e.g. \begin{table}[H])
+\usepackage{hyperref} % For hyperlinks in the PDF
+\setlength{\parskip}{0em}
+% \usepackage{paralist} % Used for the compactitem environment which makes bullet points with less space between them
+
+\usepackage{subfiles} % Split document across multiple files.
+\usepackage{enumitem}
+
+%----------------------------------------------------------------------------------------
+%	ABSTRACT
+%----------------------------------------------------------------------------------------
+
+\usepackage{abstract} % Allows abstract customization
+\renewcommand{\abstractnamefont}{\normalfont\bfseries} % Set the "Abstract" text to bold
+\renewcommand{\abstracttextfont}{\normalfont\small\itshape} % Set the abstract itself to small italic text
+
+%----------------------------------------------------------------------------------------
+%	TITLES
+%----------------------------------------------------------------------------------------
+
+\usepackage{titlesec} % Allows customization of titles
+\titleformat{\section}[block]{\Large}{\thesection}{1em}{} % Change the look of the section titles
+\titleformat{\subsection}[block]{\large}{\thesubsection}{1em}{} % Change the look of the section titles
+
+%----------------------------------------------------------------------------------------
+%	HEADER/FOOTER
+%----------------------------------------------------------------------------------------
+
+\usepackage{fancyhdr} % Headers and footers
+\pagestyle{fancy} % All pages have headers and footers
+\fancyhead{} % Blank out the default header
+\fancyfoot{} % Blank out the default footer
+%\fancyhead[C]{Running title $\bullet$ November 2012 $\bullet$ Vol. XXI, No. 1} % Custom header text
+\fancyfoot[RO,LE]{\thepage} % Custom footer text
+
+%----------------------------------------------------------------------------------------
+%	TITLE SECTION
+%----------------------------------------------------------------------------------------
+
+\title{\vspace{-15mm}\fontsize{20pt}{10pt}\selectfont\textbf{Optimizing WahooML, A Query Optimizer for the Spark Machine Learning Pipeline}\\[1\baselineskip] \Large{M.Eng Thesis Proposal}} % Article title
+
+\author{
+M.Eng.\ Candidate:\\
+Kathryn Siegel\\
+\href{mailto:ksiegel@mit.edu}{ksiegel@mit.com}\\
+MIT
+\and
+Faculty Advisor:\\
+Sam Madden\\
+\href{mailto:madden@csail.mit.edu}{madden@csail.mit.edu}\\
+MIT Database Group
+\and
+Mentor:\\
+Manasi Vartak\\
+\href{mailto:mvartak@mit.edu}{mvartak@mit.edu}\\
+MIT Database Group
+}
+\date{November 2015}
+
+%----------------------------------------------------------------------------------------
+%	CONDITIONALS
+%----------------------------------------------------------------------------------------
+
+\usepackage{etoolbox}
+\newtoggle{cols}
+\togglefalse{cols}
+
+%\iftoggle{cols}{
+%    \newcommand{\myfigure}{figure*}
+%    \newcommand{\mytable}{table*}
+%}{
+%    \newcommand{\myfigure}{figure}
+%    \newcommand{\mytable}{table}
+%}
+
+%----------------------------------------------------------------------------------------
+
+\begin{document}
+
+\maketitle % Insert title
+
+\thispagestyle{fancy} % All pages have headers and footers
+\begin{doublespacing}
+%----------------------------------------------------------------------------------------
+%	ABSTRACT
+%----------------------------------------------------------------------------------------
+
+\subfile{sections/abstract}
+
+% \iftoggle{cols} {
+%  	\begin{multicols}{2}
+% }
+
+%----------------------------------------------------------------------------------------
+%	ARTICLE CONTENTS
+%----------------------------------------------------------------------------------------
+
+\subfile{sections/introduction}
+\subfile{sections/previouswork}
+\subfile{sections/initialprogress}
+\subfile{sections/proposedwork}
+\subfile{sections/benchmarks}
+\subfile{sections/timeline}
+\subfile{sections/conclusion}
+\subfile{sections/references}
+\end{doublespacing}
+
+%----------------------------------------------------------------------------------------
+%	REFERENCE LIST
+%----------------------------------------------------------------------------------------
+
+% \begin{thebibliography}{99} % Bibliography - this is intentionally simple in this template
+
+% \bibitem[Figueredo and Wolf, 2009]{Figueredo:2009dg}
+% Figueredo, A.~J. and Wolf, P. S.~A. (2009).
+% \newblock Assortative pairing and life history strategy - a cross-cultural
+%   study.
+% \newblock {\em Human Nature}, 20:317--330.
+
+% \end{thebibliography}
+
+%----------------------------------------------------------------------------------------
+
+\iftoggle{cols} {
+ 	\end{multicols}
+}
+
+\end{document}
