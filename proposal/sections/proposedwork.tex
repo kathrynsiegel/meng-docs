@@ -4,8 +4,7 @@
 
 \section{Proposed Work}
 
-I intend to continue my research with WahooML for the rest of this fall 2015
-semester, IAP 2016, and the spring 2016 semester. In general, the WahooML
+I will continue research on WahooML for my thesis. In general, the WahooML
 development team will work on the three main components of the system, which
 are as follows.
 
@@ -129,11 +128,49 @@ them, decreasing overall computation.
 An ensemble model is a machine learning algorithm created from a set of other
 models. In Spark, an ensemble model is either a gradient-boosted tree or a
 random forest, both of which use decision trees as their base models. My
-research will focus on random forests.
+research will focus on random forests, which combine sets of decision
+trees to minimize overfitting.
 
-Random forests combine a set of decision trees to minimize overfitting. At a
-high level, my research plans to optimize formation of a random forest by
-training a set of decision trees together. Moreover, I will investigate the
-possibility of simultaneously combining and training these decision trees.
+The algorithm for random forests first ``bags,'' or randomly samples, the
+dataset; one decision tree is grown with each of these random samples. The
+algorithm uses some standard equation to combine the predictions of the
+individual decision trees. The most common implementation simply averages the
+individual outcomes. [1] This repetitive structure lends itself to several
+possible optimizations:
+
+\begin{enumerate}[topsep=0pt,itemsep=-1ex,partopsep=1ex,parsep=1ex]
+
+\item WahooML could store these trees in a compressed format in the ModelDB;
+the trees could be flattened into arrays of nodes. Because random forests
+tend to be dominated by sets of important variables, WahooML could prune the
+decision trees before storage to conserve space.
+
+\item The system could
+abort growing portions of decision trees that deal only with weak predictors;
+WahooML would learn information about weak predictors from other decision
+trees.
+
+\item Since random forests inject randomness through bagging and through node
+splits, the system could assist a data scientist by running the training
+process multiple times and selecting the most predictive set of decision trees.
+
+\item The system could assist users with tuning the training parameters. Spark
+allows users to specify four main parameters: the number of trees in the forest,
+the maximum depth of each tree in the forest, the subsampling rate used to
+select data points for each bag, and the number of features used to split the data
+at each node. WahooML could accept ranges of these parameters and train
+ensemble models with each possible combination of parameters, outputting the
+optimal ensemble model of the set. The system could share repetitive
+computation across runs with similar parameters to further decrease the
+computational load.
+
+\end{enumerate}
+
+Because decision trees are one of the most common techniques used by data
+scientists, optimizations in training time will benefit users. WahooML will
+also automate some manual derivation of optimal parameters, resulting in more
+predictive models.
+
+
 
 \end{document}

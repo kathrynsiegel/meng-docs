@@ -4,8 +4,9 @@
 \section{Initial Progress}
 
 In the first half of the semester, we have developed an initial prototype that
-caches trained models in a model database built using MongoDB. In this section,
-I discuss the initial design discussions and the thought processes that helped
+caches trained models in a model database built using MongoDB. A web interface
+displays trained models and logging messages from Spark. In this section, I
+discuss the initial design discussions and the thought processes that helped
 formulate the preliminary system.
 
 \subsection{Spark-WahooML Integration}
@@ -56,6 +57,14 @@ representation of the model specification, and a hash of the dataset on which
 the model was trained. Doing so allows us to query for a trained model by its
 model specification and training dataset. Future research will investigate what
 other computation we can store in the database to reduce overall computation.
+
+\subsection{User Interface}
+
+The User Interface (UI) is built using Express and Node.js. The WahooML Spark
+jobs pass log messages to the scala WahooConnector class, which then sends
+these messages to the Node.js backend using POST requests. The application then
+uses Socket.io to push these log messages to the frontend. Users can browse the
+models in the ModelDB and see these log messages using the UI.
 
 
 \end{document}

@@ -1,7 +1,8 @@
 %----------------------------------------------------------------------------------------
 %	PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
 %----------------------------------------------------------------------------------------
-\newcommand{\myfontsize}{12pt}
+\newcommand{\myfontsize}{10pt}
+
 \newcommand{\projectname}{WahooML}
 
 \documentclass[\myfontsize, letterpaper]{article}
@@ -28,26 +29,20 @@
 
 \usepackage{abstract} % Allows abstract customization
 \renewcommand{\abstractnamefont}{\normalfont\bfseries} % Set the "Abstract" text to bold
-\renewcommand{\abstracttextfont}{\normalfont\small\itshape} % Set the abstract itself to small italic text
+\renewcommand{\abstracttextfont}{\normalfont\itshape} % Set the abstract itself to small italic text
 
 %----------------------------------------------------------------------------------------
 %	TITLES
 %----------------------------------------------------------------------------------------
 
-\usepackage{titlesec} % Allows customization of titles
-\titleformat{\section}[block]{\Large}{\thesection}{1em}{} % Change the look of the section titles
-\titleformat{\subsection}[block]{\large}{\thesubsection}{1em}{} % Change the look of the section titles
+% \usepackage{titlesec} % Allows customization of titles
+% \titleformat{\section}[block]{\Large}{\thesection}{1em}{} % Change the look of the section titles
+% \titleformat{\subsection}[block]{\large}{\thesubsection}{1em}{} % Change the look of the section titles
 
 %----------------------------------------------------------------------------------------
 %	HEADER/FOOTER
 %----------------------------------------------------------------------------------------
 
-\usepackage{fancyhdr} % Headers and footers
-\pagestyle{fancy} % All pages have headers and footers
-\fancyhead{} % Blank out the default header
-\fancyfoot{} % Blank out the default footer
-%\fancyhead[C]{Running title $\bullet$ November 2012 $\bullet$ Vol. XXI, No. 1} % Custom header text
-\fancyfoot[RO,LE]{\thepage} % Custom footer text
 
 %----------------------------------------------------------------------------------------
 %	TITLE SECTION
@@ -79,15 +74,11 @@ MIT Database Group
 
 \usepackage{etoolbox}
 \newtoggle{cols}
-\togglefalse{cols}
 
-%\iftoggle{cols}{
-%    \newcommand{\myfigure}{figure*}
-%    \newcommand{\mytable}{table*}
-%}{
-%    \newcommand{\myfigure}{figure}
-%    \newcommand{\mytable}{table}
-%}
+% \newcommand{\myfigure}{figure*}
+% \newcommand{\mytable}{table*}
+% \newcommand{\myfigure}{figure}
+% \newcommand{\mytable}{table}
 
 %----------------------------------------------------------------------------------------
 
@@ -95,17 +86,16 @@ MIT Database Group
 
 \maketitle % Insert title
 
-\thispagestyle{fancy} % All pages have headers and footers
-\begin{doublespacing}
+% \begin{doublespacing}
 %----------------------------------------------------------------------------------------
 %	ABSTRACT
 %----------------------------------------------------------------------------------------
 
 \subfile{sections/abstract}
 
-% \iftoggle{cols} {
-%  	\begin{multicols}{2}
-% }
+\vspace{4mm}
+
+\begin{multicols}{2}
 
 %----------------------------------------------------------------------------------------
 %	ARTICLE CONTENTS
@@ -119,7 +109,7 @@ MIT Database Group
 \subfile{sections/timeline}
 \subfile{sections/conclusion}
 \subfile{sections/references}
-\end{doublespacing}
+% \end{doublespacing}
 
 %----------------------------------------------------------------------------------------
 %	REFERENCE LIST
@@ -137,8 +127,6 @@ MIT Database Group
 
 %----------------------------------------------------------------------------------------
 
-\iftoggle{cols} {
- 	\end{multicols}
-}
+\end{multicols}
 
 \end{document}
