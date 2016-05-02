@@ -1,0 +1,214 @@
+\chapter{Previous Work} Since Leo Breiman introduced random forests to the data
+science community in 2001 \cite{Breiman}, researchers have tested various
+refinements of the algorithm. One area of focus has been augmenting the
+algorithm for online learning. This chapter describes the existing literature
+on incremental and online random forests.
+
+\section{Ensemble models} A random forest is a type of ensemble model, which
+average the predictions of many different ``reasonably good'' models to produce
+a prediction that better estimates the true hypothesis. Ensemble models are
+highly successful as machine learning tools, because they avoid the
+chance-dependent pitfalls of many singular models. For example, gradient
+descent methods can get stuck in local minima, but combining many models
+increases the chance that one will find the global minimum. Alternatively, even
+if none of the models in the ensemble  produce the true hypothesis, averaging
+every prediction can lead to a a prediction that more closely matches the
+underlying truth. \cite{Dietterich}
+
+There are several established methods for aggregating model predictions in
+ensembles. The Bayesian voting algorithm iterates through all hypotheses
+produced by models in the ensemble, and then combines the results based on how
+likely the hypothesis is given the sample. Another method is to manipulate the
+training data via bagging, known as bootstrap aggregation, and boosting, known
+as weighted training. Bagging involves randomly sampling points with
+replacement from a common dataset; the default Spark implementation of random
+forests uses bagging over boosting. Other ensemble methods exist but are not
+utilized in Spark ML.
+
+
+\section{Online random forests} Standard random forests are offline
+classifiers; trees are built on static datasets. Offline classifiers are poorly
+suited for datasets for which additional data points become available
+incrementally. A prevalent example is logging; logs are published as actions
+take place within a system, and a classifier for these logs must take into
+account the new information to avoid becoming inaccurate. Similar problems
+requiring an online classifier are found throughout industry. For example,
+Yahoo uses an online classifier to characterize relevant articles to show each
+user on its homepage. In many of these use cases, retraining the classifier
+from scratch would take an excessive amount of time, given the enormous amount
+of existing training data. Since new batches of data are often far smaller than
+the size of the aggregate training data, the new data only shifts a
+classifier's behavior slightly. Retraining an entire classifier from scratch to
+capture slight shifts seems wasteful; online classifiers provide a far more
+efficient approach.
+
+In this thesis, I study incremental random forest classifiers--forests that
+update themselves with new batches of data. Incremental forests are a subset
+online random forests; they are updated with new batches of data, rather than
+with one new point at a time. Batched updates can take advantage of Spark's
+strength, which is distributed, batched computation. Simply implementing an
+online random forest classifier in Spark would be computationally wasteful, as
+it would require a new Spark job for every additional point. Focusing on
+batched updates plays to Spark's strengths and addresses a sparser area of the
+machine learning literature. Existing online methods are easily extended into
+batched methods, and batched computation provides an opportunity for
+optimizations.
+
+\subsection{Saffari online random forests} The most well-known implementation
+of an online random forest is the Saffari implementation. \cite{Saffari} In
+offline mode, a Saffari random forest behaves like a typical random forest:
+each tree is created by sampling the original training set, the split at each
+node is chosen as the best among a random set of feature candidates, and
+predictions are made by summing conditional probabilities among all of the
+trees.
+
+In online mode, trees receive a serial string of points and are grown in an
+extremely randomized fashion; at every node, tests and thresholds are chosen
+randomly. Specifically, when a node is created, it establishes a set of N
+random tests and maintains statistics on the left and right partitions created
+by each test. When a new point is added to the tree, the point's features place
+it in a leaf node. The algorithm then recalculates the gain $\mathrm{G_n}$ with
+respect to each test in that node $n$ according to the following equation:
+\begin{equation} \mathrm{G_n}=\ell_n - \frac{|samples_l|}{|samples_n|}*\ell_l -
+\frac{|samples_r|}{|samples_n|}*\ell_r, \end{equation} where $\ell$ indicates
+loss, $l$ represents the left partition of a split, and $r$ represents the
+right partition of a split. The Saffari algorithm splits a leaf based on two
+hyperparameters: $\alpha$, the minimum number of samples a node must see, and
+$\beta$, the minimum gain a split must achieve. When both conditions are
+satisfied, the node splits.
+
+The Saffari algorithm also specifies that trees can be discarded randomly,
+where the probability that a tree is discarded increases with its out-of-bag
+error. This trait allows the random forest to adapt to changes in the data
+distribution.
+
+Saffari claims this algorithm is better than alternatives such as the Hoeffding
+tree algorithm (addressed later in this chapter), because it fits better to the
+inherent nature of decision trees. Empirically, Saffari random forests perform
+better than boosted forests. In my research, I test the efficacy of using the
+extremely randomized trees of the Saffari algorithm. I also experiment with the
+aforementioned split hyperparameters, tweaking my algorithm to select more
+optimal gain and points thresholds. Since the Spark random forest
+implementation closely matches the Saffari offline random forest
+implementation, many of my initial modifications to the Spark code to provide
+online learning capability are in line with the Saffari online-mode algorithm.
+
+\subsection{Denil online random forests} In "Consistency of Online Random
+Forests," Misha Denil et al. proposes and evaluates improvements to the Saffari
+online random forest algorithm. Denil online forests partition the sequence of
+data points into ``structure'' points and ``estimation'' points. \cite{Denil}
+Structure points influence the structure of the tree but do not affect the
+predictions made in tree leaves. Estimation points do not influence the
+structure of the tree, but are used to re-estimate probabilities. The Denil
+algorithm uses the same split selection procedure as the Saffari algorithm. The
+paper shows that this refined implementation achieves a higher accuracy on
+complex datasets compared to a comparable implementation of the Saffari
+algorithm.
+
+Much of the existing literature around online random forests acknowledges one
+primary setback: due to decision trees’ recursive structure, lower data cannot
+be used to correct earlier decisions. Both the Saffari and the Denil
+implementations have this flaw. The new few subsections address algorithms that
+involve regrowing part or all of select decision trees within a random forest.
+My research draws on both classes of techniques-{}-incremental growth and
+regeneration.
+
+\subsection{Mondrian forests}
+
+Another type of online random forest is a Mondrian forest \cite{NIPS2014_5234},
+which are comprised of augmented extremely randomized decision trees. The
+algorithm for building each Mondrian decision tree is as follows.  We start at
+the root and allocate a budget, $\lambda$, for this node. Then, we recursively
+process each node by randomly choosing split locations on the ranges of feature
+values. For each point $j$, dimension $d$, and dimension-wise maximum and
+minimum $u_{jd}$ and $l_{jd}$, let $E = \sum_d(u_{jd}-l_{jd})$. Then, these
+cuts each cost $\lambda' = \lambda - E$. If we can ``afford'' the cut, we split
+the node and assign budget $\lambda'$ to each subinterval. The tree stops
+growing when no more cuts can be afforded at any leaf node. Throughout the
+growing process, we denote a split hierarchy using a time variable. A node's
+time variable $\tau$ is set when a split is made within that node; the value of
+this variable is equivalent to $E + \tau_{parent}$. 
+
+To adapt Mondrian trees for online learning, we use the time parameter to
+determine where a new cut should be inserted. Starting at the root, we recurse
+down the tree until the cost coefficient $E_{new}$ for this new node is less
+than the cost coefficient $E_{old}$ for some node. We then insert the new node
+as the parent of this old node and adjust all children nodes accordingly.
+
+Mondrian forests achieve an accuracy very close to offline Breiman random
+forests and extremely randomized forests trained on the same fraction of the
+data. The Mondrian algorithm significantly outperforms the Saffari algorithm
+when trained in online mode on the same fraction of data. Furthermore, Mondrian
+forests were shown to adapt to new data an order of magnitude faster than
+simply regrowing a forest from scratch.
+
+The drawbacks of Mondrian forests include its relative intolerance of
+irrelevant data. Because splits are random, irrelevant and relevant features
+are equally likely to be chosen; noisy features can then harm the overall
+accuracy of each tree. Additionally, a Mondrian forest in online mode might
+choose to insert a node close to a root, thus initiating recalculation of a
+large section of the tree.
+
+While Mondrian forests outperform Saffari online random forests, regrowing a
+tree section requires passing through all of the data points yet seen. As
+datasets grow larger, the overhead incurred by additional passes through the
+data will outweight the efficiency gains of the algorithm. Mondrian forests
+have only been shown as more efficient than Saffari online random forests on
+datasets of a few thousand data points. As such, the optimal strategy should
+regrow parts of a random forest but should not require multiple passes over the
+data.
+
+\section{Concept drift} Concept drift describes changes in data distribution in
+an online learning setting that cause the mathematical relationships between
+the input variables and output predictions to change. These shifts cause ML
+classifiers trained on earlier data points to become inaccurate. The online
+random forest algorithms discussed earlier in this chapter adapt poorly to
+concept drift, as they accommodate new data by splitting leaves or regrowing
+small sections of trees in the forest. Concept drift can cause splits in nodes
+higher in the trees to become inaccurate, and a poor decision higher in the
+tree more significantly impacts performance than a mistake closer to the
+bottom. Online random forests adapt more poorly than other online classifiers
+to concept drift, as splits made in nodes are essentially permanent. In
+contrast, classifiers that use, for example, linear or logistic regression
+could just shift internal weights until the concept drift is accounted for.
+
+Therefore, accounting for concept drift in online random forests requires
+regrowing trees--the decisions from these trees must counteract bad decisions
+from other trees resulting from wrong splits. Purely incremental strategies, or
+those that just split leaves, should not be the only methods by which online
+random forests adapt to change.
+
+\section{Combined strategies} Several papers in the literature use Hoeffding
+trees to grow online random forests. Hoeffding trees for online learning were
+first proposed in a paper by Domingos and Hulten; when growing, these trees
+maintain several candidate splits in each leaf, with the quality of each split
+estimated in an online manner. \cite{Domingos} In contrast with the minimum
+gain parameter controlling splits in Denil and Saffari random forests,
+Hoeffding trees use a measure of the Hoeffding bound to ensure that a split is
+optimal. Hoeffding trees split leaves when the Hoeffding bound indicates that
+the current best split is the optimal split, within reasonable certainty. 
+
+A paper by Bifet et al. describes an implementation of the Hoeffding tree
+algorithm that adapts to concept drift. \cite{Bifet} The algorithm grows
+Hoeffding trees of different sizes; the authors reason that smaller trees can
+adapt more quickly to concept drift, whereas larger trees are less sensitive to
+noisy deviations. The trees are occasionally either partly or fully regrown,
+depending on a metric called ADWIN that estimates drift. The Bifet paper's
+results show that the method is effective on small generated datasets with
+concept drift.
+
+Abdusalam et al. developed an algorithm that grows random forests incrementally
+by using Hoeffding trees and selecting entire trees for replacement. Unlike the
+algorithm from the paper by Bifet et al., the system chunks a data stream, then
+processes data chunks serially. The algorithm detects concept drift using a
+two-window technique; if a tree's classification error between the two windows
+differs by an amount less than a threshold, it is not grown further. Otherwise,
+grow the tree incrementally. With every given batch, 25\% of the trees are
+automatically regrown, with additional trees regrown if the system detects
+concept drift.
+
+I take into account these algorithms when developing my system in Spark.
+Namely, my implementation heavily involves a balance between incremental growth
+and tree replacement, much like the algorithms in the Bifet and Abdusalam
+papers. I refer back to these previously-developed algorithms in my discussion
+of the Spark incremental random forests system developed in this thesis.

@@ -1,0 +1,28 @@
+\contentsline {chapter}{\numberline {1}Introduction}{13}
+\contentsline {section}{\numberline {1.1}Batched Workflows}{14}
+\contentsline {section}{\numberline {1.2}Random Forest Classifiers}{14}
+\contentsline {chapter}{\numberline {2}Previous Work}{17}
+\contentsline {section}{\numberline {2.1}Ensemble models}{17}
+\contentsline {section}{\numberline {2.2}Online random forests}{18}
+\contentsline {subsection}{\numberline {2.2.1}Saffari online random forests}{19}
+\contentsline {subsection}{\numberline {2.2.2}Denil online random forests}{20}
+\contentsline {subsection}{\numberline {2.2.3}Mondrian forests}{20}
+\contentsline {section}{\numberline {2.3}Concept drift}{22}
+\contentsline {section}{\numberline {2.4}Combined strategies}{22}
+\contentsline {chapter}{\numberline {3}Methods}{25}
+\contentsline {section}{\numberline {3.1}Tree regeneration strategy}{25}
+\contentsline {section}{\numberline {3.2}Incremental growth strategy}{26}
+\contentsline {section}{\numberline {3.3}Optimizations}{26}
+\contentsline {subsection}{\numberline {3.3.1}Bounding incremental growth}{26}
+\contentsline {subsection}{\numberline {3.3.2}Batched processing}{27}
+\contentsline {subsection}{\numberline {3.3.3}Tree reweighting}{27}
+\contentsline {subsection}{\numberline {3.3.4}Leaf subsampling}{28}
+\contentsline {section}{\numberline {3.4}Hybrid approach}{28}
+\contentsline {section}{\numberline {3.5}Experiments}{28}
+\contentsline {section}{\numberline {3.6}API}{29}
+\contentsline {chapter}{\numberline {4}Results}{31}
+\contentsline {section}{\numberline {4.1}Workload A: Large batches, no concept drift}{31}
+\contentsline {section}{\numberline {4.2}Workload B: Small batches, no concept drift}{35}
+\contentsline {section}{\numberline {4.3}Workload C: Large batches, concept drift}{39}
+\contentsline {section}{\numberline {4.4}Workload D: Small batches, concept drift}{39}
+\contentsline {chapter}{\numberline {5}Conclusion}{45}

@@ -1,0 +1,93 @@
+\chapter{Introduction}
+Random forests have become one of the most popular machine learning classifiers
+due to their robustness to noisy data, accuracy, and ability to handle "big
+data" workloads. However, the downside to using random forests is that, given
+additional training data, the random forest must be regrown from scratch. This
+work proposes several techniques to update a random forest incrementally
+without fully regrowing the classifier, as well as insight into the performance
+and robustness of these techniques on different workloads. Specifically, I
+explore incremental methods that are responsive to shifts in overall data
+distribution. I develop a custom incremental random forest classifier and
+provide a Scala API through which users can call incremental random forest
+methods.
+
+Chapter two describes the existing literature in online and incremental random
+forests.
+
+Chapter three describes the strategies I implemented for incrementally training
+random forests.
+
+Chapter four contains performance and robustness metrics for each of the random
+forest implementations.
+
+Chapter five describes a methodology for choosing a strategy for incremental
+random forests, as well as the overlying system that intelligently chooses
+between strategies at runtime.
+
+Chapter six describes how my implementation fits into a larger system,
+Sherlock, a data science tool for accelerating the process of model building. I
+also address additional areas for research.
+
+\section{Batched Workflows}
+
+A common pattern in data science workflows involves training the same model on
+increasing amounts of data. Such workloads are common in analytics, where
+observations are continuously collected in log entries, as well as in Internet
+of Things (IoT) networks, where extensive data collection takes place offline
+and data is transmitted periodically. Existing machine learning tools retrain a
+model on the entire dataset when new data is added. This entails reiterating
+over every single data point in the dataset, even when the added batch has a
+minimal effect on the resulting classifier. As such, implementing incremental
+training in Spark random forests should drastically improve the performance of
+these classifiers on batched workloads. This research seeks to implement and
+expose a Scala API that will allow data scientists to add data to the random
+forest using one of several incremental strategies. 
+
+\section{Random Forest Classifiers}
+
+This section introduces the mechanics of random forest classifiers. At a high
+level, random forests are collections of decision trees used for
+classification. Once grown, each decision tree classifies an unlabeled point by
+casting a vote, and the random forest reports the label with the most votes.
+\cite{Breiman}
+
+My research involves the Spark Machine Learning (ML) implementation of random
+forest classifiers. Apache Spark is a scalable system developed at Berkeley
+that provides an engine for processing big data workloads. At its core is a
+structure called the resilient distributed dataset (RDD), which can be
+distributed over a cluster of machines and is fault-tolerant. A series of
+powerful libraries run on Spark and take advantage of its powerful
+cluster-computing capabilities. One such library is Spark MLlib, which contains
+a wide array of machine learning tools. In this research, I model my
+incremental random forest classifier on the Spark random forest classifier, for
+the purposes of maintaining optimizations within the codebase that take
+advantage of Spark's strengths. Since each batch in a batched workload may
+contain a large dataset, implementing an incremental classifier in Spark allows
+us to take advantage of Spark's distributed computing capabilities for every
+batch.
+
+The Spark ML random forest classifier favors batched and aggregated computation
+over single-datapoint processing. Each dataset is first preprocessed into RDDs
+with aggregated information about each point and its features. The Spark random
+forest classifier then randomly samples the data (with replacement) according
+to a Poisson distribution, and assigns a random sample to each decision tree in
+the forest. Each decision tree is grown from the root using its sampled
+dataset; the splitting criterion for each node in a decision tree is determined
+with an element of randomness. Specifically, at each node, the set of features
+is subsampled randomly. For each of the resulting set of features, the
+classifier examines all possible values for that feature on which the data can
+be split. Among all of these candidate splits, the classifier chooses the split
+that maximizes the decrease in Gini impurity-{}-the probability that a point
+randomly selected from the node would be misclassified. The algorithm
+terminates when the maximum tree height is reached or no training points are
+misclassified within each individual decision tree.
+
+The existing Spark ML random forest classifier performs well given a large
+dataset. However, like all implementations of random forests, a change in the
+training dataset would mean retraining the random forest from scratch.
+Retraining from scratch would lead to a lot of repetitive computation; the
+aggregate composition of the dataset might not change significantly with the
+new batch, especially if each batch has far fewer data points than the overall
+dataset. This thesis presents work that allows random forest classifiers to be
+updated with each new batch of training data more efficiently, therefore saving
+time for data scientists and other users of Spark MLlib.

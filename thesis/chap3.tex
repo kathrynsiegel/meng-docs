@@ -1,0 +1,199 @@
+\chapter{Methods} This chapter describes the two main strategies I implemented
+for incrementally training random forests. I go into depth about the details of
+each implementation, hybrid strategies, and the API I exposed for use in Spark
+ML pipelines. My experiments seek to shed insight into which algorithms work
+best on different workloads.
+
+\section{Tree regeneration strategy}
+
+The first implemented strategy involves regrowing trees within the random
+forest. For every new incremental batch, the exposed Spark API allows an
+existing model to be updated with the new data. A set proportion of trees are
+randomly selected for replacement. The system then grows a random forest with
+the number of trees selected, and creates a new hybrid model with the
+maintained trees from the old model and the newly grown trees from the new
+model. To allow for the creation of hybrid models, I introduce an incremental
+random forest classification model. This model tracks metadata from
+previously-seen data and information about each tree in the forest. 
+
+\section{Incremental growth strategy}
+
+The second implemented strategy involves incrementally growing existing trees
+in the forest, and is based off of the Saffari and Denil algorithms. A user can
+update an existing incremental random forest classification model with a new
+batch of data via the exposed Spark API. Because this model tracks metadata
+from previous batches of data, the system can determine the candidate splits
+that were considered during previous growth phases of the tree. The new data is
+divided into bins specified by the previously-calculated splits and used to
+split leaves of the tree.
+
+I augmented the RandomForest class in Spark ML to store metadata about past
+runs in leaves. Specifically, the random forest metadata maintains a list of
+data splits by feature; these splits determine the ``bins'' to which each new
+point belongs. After the new batch of data is processed into bins, I merge this
+information with the information stored in each leaf. To provide leaves with
+ability to store metadata and merge in new batches of data, I implemented a
+custom incremental leaf node class that replaces the customary Spark-provided
+leaf node class. This class maintains the capabilities of the original Spark
+leaf node, but allows for changes to be made to each tree in the random forest.
+
+Once the new metadata is aggregated at each leaf, the system splits leaves that
+newly pass both requisite thresholds: the minimum number of points a leaf must
+account for and the minimum information gain from the split. After each tree is
+incrementally grown, the system returns a new incremental random forest model
+with updated metadata to the user.
+
+\section{Optimizations}
+
+\subsection{Bounding incremental growth}
+
+Since datasets can have many features, unbounded tree growth can result in
+extremely deep trees after just a few batches. The largest tree height
+supported by Spark ML is 30, after which trees can no longer be grown
+incrementally. Additionally, splitting leaves in tall trees imposes a large
+performance overhead, as the algorithm must examine a large number of candidate
+leaves. As a result, the system restricts the maximum initial tree height to a
+set value $h$, relaxing this restriction by one for each incrementally grown
+tree that receives a new batch of data. In all hybrid strategies, a tree is
+replaced when it reaches a certain threshold depth. When a tree is regrown, its
+maximum height is reset to the original value $h$. This technique prevents the
+incremental random forest from overfitting to earlier batches and allows the
+forest to better adapt to concept drift, as it ensures that later batches can
+significantly impact tree predictions.
+
+\subsection{Batched processing}
+
+The incremental random forest implementations in the Saffari and Denil papers
+describe accumulating points in leaves until the leaf is split. In the purely
+online setting, accumulating points one at a time is the only option. Since
+batched workloads allow for many points to be processed at one time, we can
+preprocess the batch into metadata structures that are passed to the relevant
+leaves and merged with the existing leaf metadata. This optimization prevents
+the system from having to run back over all previous batches to decide on a
+split.
+
+\subsection{Tree reweighting}
+
+In the batched incremental learning setting, the classifier receives an
+unlabeled batch of points, predicts the label for each point, and then views
+the labels to assess its accuracy. Each tree in the random forest has a
+different accuracy on a particular new batch of data. To increase the overall
+accuracy of the forest, after the system assesses the accuracy on each new
+batch, it weights the trees with lower accuracy to have less voting power on
+the next batch. Because this increases the chances of overfitting, the system
+restricts the extent to which tree weights can shift.
+
+To account for concept drift, I weight trees by age. With every new batch,
+trees that are not regrown are weighted to have less voting power. As a result,
+the classifier captures information from previous batches, but uses information
+from the most recent batch more heavily in the classification of the next
+batch.
+
+\subsection{Leaf subsampling}
+
+As tree height increases, the amount of computation required to grow the tree
+one level increases significantly. However, adapting an existing tree to a new
+batch of data does not necessarily require splitting every leaf in the the tree
+on the new data. Instead, the system can select a random sample of the leaves
+in the tree, and only consider these leaves for incremental growth. While this
+optimization decreases the performance of shallow random forests, for deep
+forests, it helps improve the training time without significantly impacting the
+performance.
+
+\section{Hybrid approach}
+
+The tree regeneration and incremental growth strategies are compatible; both
+can be used simultaneously within an incremental random forest. This thesis
+explores various hybrid approaches and provides insight into which approaches
+work best on datasets with and without concept drift. For each hybrid approach,
+I vary the proportion of trees that are grown with each strategy. The system
+selects trees without replacement to be replaced or grown incrementally; the
+remaining trees are unchanged. I also implement several optimizations for this
+approach that are applied to all trees after every batch.
+
+% TODO
+
+\section{Experiments}
+
+In my research, I experiment with several different parameters that affect the
+error rate of my incremental random forest classifier. I hypothesize that
+certain parameters used to build each incremental random forest will affect the
+optimal incremental strategy for that forest on my test datasets. I vary the
+following parameters in my experiments and report the effect on the optimal
+hybrid incremental algorithm.
+
+\begin{enumerate}
+
+    \item \textbf{Tree depth.} I vary the initial maximum height of each tree
+      in the random forest. In my experiments, I use two initial heights:
+      shallow and deep, which represent heights of 5 and 10, respectively. I
+      chose 10 to be the sample height for deep trees, as it is the most
+      commonly used height in the literature to obtain a high accuracy without
+      overfitting. A shallow tree height of 5 still provides some accuracy, but
+      allows the tree to adapt more significantly to concept drift in
+      incremental batches. 
+
+    \item \textbf{Tree count.} I vary the number of trees in the forest. In my
+      experiments, I test two tree quantities: narrow and wide, which represent
+      tree counts of 10 and 100, respectively. These two tree quantities are
+      most common in the literature; 10 trees are used when training time is a
+      large concern, whereas forests with 100 trees are typically more
+      accurate.
+
+    \item \textbf{Concept drift.} I test the performance of the incremental
+      random forest classifier on two datasets: one with concept drift and one
+      without concept drift. The dataset with concept drift is sampled from the
+      United States Department of Transportation Airline On-Time Statistics and
+      Delay Causes dataset; the classifier predicts whether a flight is
+      delayed, and flight delays naturally shift over the course of a year.
+      \cite{Plane} The dataset without concept drift is from the Homesite Quote
+      Conversion Kaggle competition; the classifier predicts whether a quote
+      will convert into a purchase. \cite{Homesite}
+
+\end{enumerate}
+
+\section{API}
+
+My custom incremental random forest classifier class,
+IncrementalRandomForestClassifier, exposes a Scala API for data scientists to
+use. I introduce a new model class, the
+IncrementalRandomForestClassificationModel class, which is an augmented
+adaptation of the Spark ML RandomForestClassificationModel class that allows
+for incremental optimizations. The table in figure \ref{tab:api} details the
+methods available for use in Spark ML pipelines.
+
+\begin{table}
+  \centering
+  \begin{tabular}{ | c | c | }
+  \hline
+  \textbf{Method} & \textbf{Description} \\
+  \hline
+  def train(df: DataFrame): & Trains a model for future \\
+  IncrementalRFClassificationModel &  online learning by maintaining \\
+  & tree and leaf metadata. \\ 
+  \hline
+  def update( & Updates an existing model \\
+  old: IncrementalRFClassificationModel, & with a new batch of data \\
+  df: DataFrame): & by regrowing some trees and \\
+  IncrementalRFClassificationModel & incrementally growing others. \\
+  \hline
+  def addTrees( & Trains a model using a warm \\
+  oldModel: IncrementalRFClassificationModel, & start by adding more \\
+  df: DataFrame, addedTrees: Int): & trees to the existing forest. \\
+  IncrementalRFClassificationModel & \\ 
+  \hline
+  def setRegrowProportion(prop: Int) & Set the proportion of trees \\
+  & in the forest that should be \\
+  & regrown with every new batch. \\
+  \hline
+  def setIncrementalProportion(prop: Int) & Set the proportion of trees \\
+  & in the forest that should be \\
+  & regrown with every new batch. \\
+  \hline
+  def setInitialMaxDepth(depth: Int) & Set the initial depth of \\
+  & newly-grown trees. \\
+  \hline
+  \end{tabular}
+  \caption{Scala API for the incremental random forest (RF) classifier developed in this thesis.}
+  \label{tab:api}
+\end{table}

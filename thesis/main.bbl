@@ -1,0 +1,64 @@
+\newcommand{\noopsort}[1]{} \newcommand{\printfirst}[2]{#1}
+  \newcommand{\singleletter}[1]{#1} \newcommand{\switchargs}[2]{#2#1}
+\begin{thebibliography}{10}
+
+\bibitem{Bifet}
+Albert Bifet, Geoff Holmes, Bernhard Pfahringer, Richard Kirkby, and Ricard
+  Gavald\`{a}.
+\newblock New ensemble methods for evolving data streams.
+\newblock In {\em Proceedings of the 15th ACM SIGKDD International Conference
+  on Knowledge Discovery and Data Mining}, KDD '09, pages 139--148, New York,
+  NY, USA, 2009. ACM.
+
+\bibitem{Denil}
+Misha Denil, David Matheson, and Nando de~Freitas.
+\newblock Consistency of online random forests.
+\newblock In {\em ICML (3)}, volume~28 of {\em JMLR Proceedings}, pages
+  1256--1264. JMLR.org, 2013.
+
+\bibitem{Dietterich}
+Thomas~G. Dietterich.
+\newblock Ensemble methods in machine learning.
+\newblock In {\em Proceedings of the First International Workshop on Multiple
+  Classifier Systems}, MCS '00, pages 1--15, London, UK, UK, 2000.
+  Springer-Verlag.
+
+\bibitem{Domingos}
+Pedro Domingos and Geoff Hulten.
+\newblock Mining high-speed data streams.
+\newblock In {\em Proceedings of the Sixth ACM SIGKDD International Conference
+  on Knowledge Discovery and Data Mining}, KDD '00, pages 71--80, New York, NY,
+  USA, 2000. ACM.
+
+\bibitem{Homesite}
+Kaggle.
+\newblock Homesite quote conversion.
+\newblock Accessed: 2016-04-14.
+
+\bibitem{Otto}
+Kaggle.
+\newblock Otto group product classification challenge.
+\newblock Accessed: 2016-04-28.
+
+\bibitem{NIPS2014_5234}
+Balaji Lakshminarayanan, Daniel~M. Roy, and Yee~W. Teh.
+\newblock Mondrian forests: Efficient online random forests.
+\newblock In Z.~Ghahramani, M.~Welling, C.~Cortes, N.d. Lawrence, and K.q.
+  Weinberger, editors, {\em Advances in Neural Information Processing Systems
+  27}, pages 3140--3148. Curran Associates, Inc., 2014.
+
+\bibitem{Plane}
+US~Department of~Transportation.
+\newblock Airline on-time statistics and delay causes, 2015.
+
+\bibitem{Saffari}
+Amir Saffari, Christian Leistner, Jakob Santner, Martin Godec, and Horst
+  Bischof.
+\newblock On-line random forests.
+
+\bibitem{Breiman}
+Leo~Breiman Statistics and Leo Breiman.
+\newblock Random forests.
+\newblock pages 5--32, 2001.
+
+\end{thebibliography}
