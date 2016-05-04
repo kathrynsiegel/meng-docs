@@ -10,11 +10,18 @@ The first implemented strategy involves regrowing trees within the random
 forest. For every new incremental batch, the exposed Spark API allows an
 existing model to be updated with the new data. A set proportion of trees are
 randomly selected for replacement. The system then grows a random forest with
-the number of trees selected, and creates a new hybrid model with the
+the number of trees selected, creating a new hybrid model with the
 maintained trees from the old model and the newly grown trees from the new
 model. To allow for the creation of hybrid models, I introduce an incremental
 random forest classification model. This model tracks metadata from
-previously-seen data and information about each tree in the forest. 
+previously-seen data and information about each tree in the forest. The
+incremental random forest classifier heavily relies on this metadata to
+generate summary data structures for new data batches. The stored metadata
+enforces a degree of consistency across the information stored in the leaves of
+the forest, allowing my implementation to use the existing infrastructure in
+Spark's original random forest classifier. As a result, my implementation can
+intermix tree regeneration with incremental growth, as described in the next
+section below.
 
 \section{Incremental growth strategy}
 
@@ -25,17 +32,20 @@ batch of data via the exposed Spark API. Because this model tracks metadata
 from previous batches of data, the system can determine the candidate splits
 that were considered during previous growth phases of the tree. The new data is
 divided into bins specified by the previously-calculated splits and used to
-split leaves of the tree.
+split leaves of the tree. As a result, the system avoids passing around a new
+batch of data in its entirety; instead, it uses generated bin count metadata to
+increase efficiency.
 
 I augmented the RandomForest class in Spark ML to store metadata about past
-runs in leaves. Specifically, the random forest metadata maintains a list of
-data splits by feature; these splits determine the ``bins'' to which each new
-point belongs. After the new batch of data is processed into bins, I merge this
-information with the information stored in each leaf. To provide leaves with
-ability to store metadata and merge in new batches of data, I implemented a
-custom incremental leaf node class that replaces the customary Spark-provided
-leaf node class. This class maintains the capabilities of the original Spark
-leaf node, but allows for changes to be made to each tree in the random forest.
+runs in leaves. After the new batch of data is processed into bins, I merge
+this information with the information stored in each leaf. Because the bin
+metadata merely stores aggregate counts of the points in each bin, metadata can
+be merged by adding entries in one metadata structure to the corresponding
+slots in the other metadata. To provide leaves with ability to store metadata
+and merge in new batches of data, I implemented a custom incremental leaf node
+class that replaces the customary Spark-provided leaf node class. This class
+maintains the capabilities of the original Spark leaf node, but allows for
+changes to be made to each tree in the random forest.
 
 Once the new metadata is aggregated at each leaf, the system splits leaves that
 newly pass both requisite thresholds: the minimum number of points a leaf must
@@ -44,6 +54,11 @@ incrementally grown, the system returns a new incremental random forest model
 with updated metadata to the user.
 
 \section{Optimizations}
+
+In this section, I detail the optimizations I made to my implementation of the
+incremental growth and tree replacement strategies. These optimizations are
+additions to the memory and speed optimizations already existing in ordinary
+Spark random forest classifiers.
 
 \subsection{Bounding incremental growth}
 
@@ -100,7 +115,11 @@ optimization decreases the performance of shallow random forests, for deep
 forests, it helps improve the training time without significantly impacting the
 performance.
 
-\section{Hybrid approach}
+% \subsection{Extremely Randomized Trees}
+
+% Some papers in the literature incorporate extremely randomized trees, rather than decision trees that choose optimal splits, into their random forest classifiers. \cite{Saffari} \cite{NIPS2014_5234} 
+
+\section{Experiments}
 
 The tree regeneration and incremental growth strategies are compatible; both
 can be used simultaneously within an incremental random forest. This thesis
@@ -108,12 +127,7 @@ explores various hybrid approaches and provides insight into which approaches
 work best on datasets with and without concept drift. For each hybrid approach,
 I vary the proportion of trees that are grown with each strategy. The system
 selects trees without replacement to be replaced or grown incrementally; the
-remaining trees are unchanged. I also implement several optimizations for this
-approach that are applied to all trees after every batch.
-
-% TODO
-
-\section{Experiments}
+remaining trees are unchanged. 
 
 In my research, I experiment with several different parameters that affect the
 error rate of my incremental random forest classifier. I hypothesize that
@@ -131,26 +145,55 @@ hybrid incremental algorithm.
       commonly used height in the literature to obtain a high accuracy without
       overfitting. A shallow tree height of 5 still provides some accuracy, but
       allows the tree to adapt more significantly to concept drift in
-      incremental batches. 
-
-    \item \textbf{Tree count.} I vary the number of trees in the forest. In my
-      experiments, I test two tree quantities: narrow and wide, which represent
-      tree counts of 10 and 100, respectively. These two tree quantities are
-      most common in the literature; 10 trees are used when training time is a
-      large concern, whereas forests with 100 trees are typically more
-      accurate.
+      incremental batches.
 
     \item \textbf{Concept drift.} I test the performance of the incremental
-      random forest classifier on two datasets: one with concept drift and one
-      without concept drift. The dataset with concept drift is sampled from the
-      United States Department of Transportation Airline On-Time Statistics and
-      Delay Causes dataset; the classifier predicts whether a flight is
-      delayed, and flight delays naturally shift over the course of a year.
-      \cite{Plane} The dataset without concept drift is from the Homesite Quote
-      Conversion Kaggle competition; the classifier predicts whether a quote
-      will convert into a purchase. \cite{Homesite}
+      random forest classifier on four datasets: two with concept drift and two
+      without concept drift. The datasets with concept drift show seasonal
+      changes over the course of many months, whereas the datasets without
+      concept drift are randomized as to ensure that there is no significant
+      shift in data distribution.
 
+    \item \textbf{Batch size.} I vary the batch size of the data workloads to
+      test the impact of batch size on classifier performance and optimal
+      strategy. Specifically, I select 100 as the ``small'' batch size and
+      2,000 as the ``large'' batch size. 
+
+    \item \textbf{Hybrid strategy.} I vary the proportion of trees grown
+      incrementally between 0.0 and 1.0, using intermediate steps of 0.1. I
+      also vary the proportion of trees regrown after each batch from 0.0 to
+      1.0 with step size 0.1. No results are recorded where the sum of these two
+      proporsions is invalid---i.e. exceed 1.0. 
 \end{enumerate}
+
+Through my experiments, I seek to diagnose the optimal hybrid approach for each
+of four data workloads, shown in Table \ref{tab:workloads}. To evaluate the
+efficiency and accuracy of a classifier, I measure the training time and
+predictive error rate on the next batch. I compare the metrics taken on random
+forest classifiers running a variety of incremental strategies to the control
+setting, which involves regrowing the entire random forest from scratch on all
+batches previously seen. The results chapter of this thesis discusses the
+results for each workload separately, and then explains an overarching method
+for selecting a general hybrid strategy for a new workload.
+
+\begin{table}
+  \centering
+  \begin{tabular}{ | c | c | c | }
+    \hline
+    \textbf{Workload} & \textbf{Batch size} & \textbf{Concept Drift} \\
+    \hline
+    Homesite Quote Conversion & large & no \\
+    \hline
+    Otto Group Product Classification & small & no \\
+    \hline
+    Airline Delay Causes & large & yes \\
+    \hline
+    Bike Sharing & small & yes \\
+    \hline
+  \end{tabular}
+  \caption{I run experiments on the four example workloads listed in this table. These workloads span the combinations of small and large batch size with existent or nonexistent concept drift.}
+  \label{tab:workloads}
+\end{table}
 
 \section{API}
 
@@ -159,8 +202,9 @@ IncrementalRandomForestClassifier, exposes a Scala API for data scientists to
 use. I introduce a new model class, the
 IncrementalRandomForestClassificationModel class, which is an augmented
 adaptation of the Spark ML RandomForestClassificationModel class that allows
-for incremental optimizations. The table in figure \ref{tab:api} details the
-methods available for use in Spark ML pipelines.
+for incremental optimizations. Table \ref{tab:api} details the methods
+available for use in Spark ML pipelines. The code for my implementation of
+incremental random forest classifiers has been open-sourced on Github.
 
 \begin{table}
   \centering

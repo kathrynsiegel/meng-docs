@@ -1,6 +1,7 @@
 \addvspace {10\p@ }
 \addvspace {10\p@ }
 \addvspace {10\p@ }
-\contentsline {table}{\numberline {3.1}{\ignorespaces Scala API for the incremental random forest (RF) classifier developed in this thesis.}}{30}
+\contentsline {table}{\numberline {3.1}{\ignorespaces I run experiments on the four example workloads listed in this table. These workloads span the combinations of small and large batch size with existent or nonexistent concept drift.}}{30}
+\contentsline {table}{\numberline {3.2}{\ignorespaces Scala API for the incremental random forest (RF) classifier developed in this thesis.}}{31}
 \addvspace {10\p@ }
 \addvspace {10\p@ }

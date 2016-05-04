@@ -12,17 +12,16 @@
 \contentsline {chapter}{\numberline {3}Methods}{25}
 \contentsline {section}{\numberline {3.1}Tree regeneration strategy}{25}
 \contentsline {section}{\numberline {3.2}Incremental growth strategy}{26}
-\contentsline {section}{\numberline {3.3}Optimizations}{26}
-\contentsline {subsection}{\numberline {3.3.1}Bounding incremental growth}{26}
+\contentsline {section}{\numberline {3.3}Optimizations}{27}
+\contentsline {subsection}{\numberline {3.3.1}Bounding incremental growth}{27}
 \contentsline {subsection}{\numberline {3.3.2}Batched processing}{27}
-\contentsline {subsection}{\numberline {3.3.3}Tree reweighting}{27}
+\contentsline {subsection}{\numberline {3.3.3}Tree reweighting}{28}
 \contentsline {subsection}{\numberline {3.3.4}Leaf subsampling}{28}
-\contentsline {section}{\numberline {3.4}Hybrid approach}{28}
-\contentsline {section}{\numberline {3.5}Experiments}{28}
-\contentsline {section}{\numberline {3.6}API}{29}
-\contentsline {chapter}{\numberline {4}Results}{31}
-\contentsline {section}{\numberline {4.1}Workload A: Large batches, no concept drift}{31}
-\contentsline {section}{\numberline {4.2}Workload B: Small batches, no concept drift}{35}
-\contentsline {section}{\numberline {4.3}Workload C: Large batches, concept drift}{39}
-\contentsline {section}{\numberline {4.4}Workload D: Small batches, concept drift}{39}
-\contentsline {chapter}{\numberline {5}Conclusion}{45}
+\contentsline {section}{\numberline {3.4}Experiments}{28}
+\contentsline {section}{\numberline {3.5}API}{30}
+\contentsline {chapter}{\numberline {4}Results}{33}
+\contentsline {section}{\numberline {4.1}Workload A: Large batches, no concept drift}{33}
+\contentsline {section}{\numberline {4.2}Workload B: Small batches, no concept drift}{37}
+\contentsline {section}{\numberline {4.3}Workload C: Large batches, concept drift}{40}
+\contentsline {section}{\numberline {4.4}Workload D: Small batches, concept drift}{43}
+\contentsline {chapter}{\numberline {5}Conclusion}{47}

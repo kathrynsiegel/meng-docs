@@ -12,45 +12,45 @@ A level-1 auxiliary file: biblio.aux
 The style file: plain.bst
 Database file #1: main.bib
 Warning--empty journal in Breiman
-You've used 10 entries,
+You've used 11 entries,
             2118 wiz_defined-function locations,
-            576 strings with 5758 characters,
-and the built_in function-call counts, 3817 in all, are:
-= -- 383
-> -- 163
+            581 strings with 5856 characters,
+and the built_in function-call counts, 4019 in all, are:
+= -- 401
+> -- 170
 < -- 7
-+ -- 63
-- -- 53
-* -- 227
-:= -- 587
-add.period$ -- 33
-call.type$ -- 10
-change.case$ -- 54
++ -- 66
+- -- 55
+* -- 232
+:= -- 620
+add.period$ -- 36
+call.type$ -- 11
+change.case$ -- 58
 chr.to.int$ -- 0
-cite$ -- 11
-duplicate$ -- 159
-empty$ -- 315
-format.name$ -- 53
-if$ -- 855
+cite$ -- 12
+duplicate$ -- 166
+empty$ -- 337
+format.name$ -- 55
+if$ -- 899
 int.to.chr$ -- 0
-int.to.str$ -- 10
+int.to.str$ -- 11
 missing$ -- 6
-newline$ -- 52
-num.names$ -- 22
-pop$ -- 83
+newline$ -- 57
+num.names$ -- 24
+pop$ -- 94
 preamble$ -- 2
-purify$ -- 44
+purify$ -- 47
 quote$ -- 0
-skip$ -- 134
+skip$ -- 140
 stack$ -- 0
-substring$ -- 220
-swap$ -- 60
+substring$ -- 225
+swap$ -- 61
 text.length$ -- 7
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 40
+type$ -- 44
 warning$ -- 1
-while$ -- 38
-width$ -- 12
-write$ -- 113
+while$ -- 40
+width$ -- 13
+write$ -- 122
 (There was 1 warning)

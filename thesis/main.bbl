@@ -51,6 +51,11 @@ Balaji Lakshminarayanan, Daniel~M. Roy, and Yee~W. Teh.
 US~Department of~Transportation.
 \newblock Airline on-time statistics and delay causes, 2015.
 
+\bibitem{Bikeshare}
+UCI Machine~Learning Repository.
+\newblock Bike sharing dataset data set.
+\newblock Accessed: 2016-05-04.
+
 \bibitem{Saffari}
 Amir Saffari, Christian Leistner, Jakob Santner, Martin Godec, and Horst
   Bischof.

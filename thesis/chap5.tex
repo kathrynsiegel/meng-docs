@@ -1,1 +1,71 @@
 \chapter{Conclusion}
+
+In this thesis, I examined four datasets that differ in batch size and
+presence of concept drift, and determined the optimal incremental strategy for
+each dataset. While the dominant predictor of strategy was batch size, the
+presence of concept drift also affected the optimal incremental strategy.
+
+Figure \ref{fig:tree} captures the observed trends. For most datasets, with
+both time and error rate taken into account, a pure incremental growth or pure
+tree regeneration strategy seemed optimal. The most significant trend was that
+incremental strategies were optimal with small batch sizes, and that tree
+regrowth strategies were optimal with large batch sizes. Moreover, my results
+show that not all trees must be modified with each batch for the random forest
+to adapt to new information. In many cases, incrementally growing or
+regenerating too many trees led to overfitting on a particular batch, and
+consequently led to a high predictive error rate. Since regenerating or
+incrementally growing a larger percentage of trees also increases training
+time, modifying a smaller percentage of trees---between 20 and 50\%---is
+optimal.
+
+Overall, this thesis presented the two main strategies for growing random
+forest classifiers incrementally, and compared them over four differing
+datasets: the Homesite, Otto Group, Airline Delay, and Bike Sharing datasets.
+The purpose of this analysis was to provide insights into the behavior of
+incremental random forests that data scientists can generalize to other
+datasets. Figure \ref{fig:tree} can stand as a reference as to what strategies
+are likely to be optimal for other workloads, as long as the batch size and
+degree of concept drift are known.
+
+Moreover, I provide a novel implementation of these two strategies in Spark
+Machine Learning (ML). My implementation is different from existing incremental
+random forest libraries, as it runs within Spark and handles data in batches.
+Other implementations, such as those from the Saffari and Denil papers, process
+each point individually, which would be inefficient in Spark. As such, my
+implementation takes advantage of several optimizations only possible when
+processing batched workloads. Overall, my system demonstrates significant
+efficiency gains when compared to the standard method of entirely regrowing
+random forests. I open sourced my implementation of Spark incremental random
+forests at 
+
+\begin{center}
+https://github.com/kathrynsiegel/incremental-random-forest
+\end{center}
+
+\noindent
+so that others may use it in the future.
+
+\begin{figure}
+\begin{tikzpicture}[every tree node/.style={align=center,anchor=north,draw,rectangle},
+    level distance=2cm,sibling distance=0.5cm, 
+  edge from parent path={(\tikzparentnode) -- (\tikzchildnode)}]
+  \Tree [.{Batch size?}
+    \edge node[auto=right] {Large};  
+    [.{Prefer tree \\ regrowth strategies}  
+      [.{Concept drift?} 
+        \edge node[auto=right] {Yes};
+        [.{Regrow 20\% \\(Airline Delay dataset)} ]
+        \edge node[auto=left] {No};
+        [.{Regrow 30\% and \\ use deep trees\\(Homesite dataset)} ]
+      ]
+    ]
+    \edge node[auto=left] {Small};
+    [.{Prefer incremental \\ growth strategies}
+      [.{Incrementally grow 10-50\% \\(Otto Group dataset and \\ Bikesharing dataset)} ]
+  ] ]
+\end{tikzpicture}
+\caption{This tree summarizes my results for the four tested datasets, and provides loose rules on what incremental strategy is likely optimal for other datasets}
+\label{fig:tree}
+\end{figure}
+
+
